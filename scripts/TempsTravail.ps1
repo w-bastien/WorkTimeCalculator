@@ -12,15 +12,20 @@ $script:Translations = @{
         HeaderTitle = "Calcul du temps de travail"
         HeaderDescription = "Saisissez les heures au format HH:mm. Le total se met à jour automatiquement."
         AddRow = "+ Ajouter une ligne"
+        AddRowIcon = "＋"
         Recalculate = "Recalculer"
+        RecalculateIcon = "↻"
         ExportCsv = "Export CSV"
+        ExportCsvIcon = "⇩"
         CopyClipboard = "Copier"
+        CopyClipboardIcon = "⧉"
         Language = "Langue :"
         TotalLabel = "Total : "
         StartLabel = "Début :"
         EndLabel = "Fin :"
         DurationLabel = "Durée :"
         Delete = "Supprimer"
+        DeleteIcon = "🗑"
         TimeFormatTooltip = "Format attendu : HH:mm, exemple 08:30"
         CsvHeader = "Debut;Fin;Duree;Erreur"
         CsvTotal = "Total"
@@ -46,15 +51,20 @@ $script:Translations = @{
         HeaderTitle = "Worktime calculator"
         HeaderDescription = "Enter times in HH:mm format. The total updates automatically."
         AddRow = "+ Add row"
+        AddRowIcon = "＋"
         Recalculate = "Recalculate"
+        RecalculateIcon = "↻"
         ExportCsv = "Export CSV"
+        ExportCsvIcon = "⇩"
         CopyClipboard = "Copy"
+        CopyClipboardIcon = "⧉"
         Language = "Language:"
         TotalLabel = "Total: "
         StartLabel = "Start:"
         EndLabel = "End:"
         DurationLabel = "Duration:"
         Delete = "Delete"
+        DeleteIcon = "🗑"
         TimeFormatTooltip = "Expected format: HH:mm, example 08:30"
         CsvHeader = "Start;End;Duration;Error"
         CsvTotal = "Total"
@@ -111,7 +121,7 @@ Add-Type -AssemblyName WindowsBase
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderBrush" Value="{StaticResource OfficeBlueBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Padding" Value="8,4"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
@@ -146,6 +156,7 @@ Add-Type -AssemblyName WindowsBase
             <Setter Property="Background" Value="White"/>
             <Setter Property="Foreground" Value="{StaticResource OfficeTextBrush}"/>
             <Setter Property="BorderBrush" Value="{StaticResource OfficeBorderBrush}"/>
+            <Setter Property="Padding" Value="8,4"/>
         </Style>
 
         <Style x:Key="OfficeTextBoxStyle" TargetType="TextBox">
@@ -203,10 +214,10 @@ Add-Type -AssemblyName WindowsBase
                 <TextBlock Name="LblHeaderTitle" Text="Worktime calculator" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource OfficeTextBrush}" Margin="0,0,0,4"/>
                 <TextBlock Name="LblHeaderDescription" Foreground="{StaticResource OfficeMutedTextBrush}" Text="Enter times in HH:mm format. The total updates automatically." Margin="0,0,0,12"/>
                 <StackPanel Orientation="Horizontal">
-                    <Button Name="BtnAjouter" Content="+ Add row" Width="150" Height="34" Margin="0,0,10,0" Style="{StaticResource OfficeButtonStyle}"/>
-                    <Button Name="BtnCalculer" Content="Recalculate" Width="110" Height="34" Margin="0,0,10,0" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
-                    <Button Name="BtnExportCsv" Content="Export CSV" Width="110" Height="34" Margin="0,0,10,0" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
-                    <Button Name="BtnCopyClipboard" Content="Copy" Width="110" Height="34" Margin="0,0,10,0" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
+                    <Button Name="BtnAjouter" Content="＋" Width="48" Height="32" Margin="0,0,8,0" ToolTip="Add row" Style="{StaticResource OfficeButtonStyle}"/>
+                    <Button Name="BtnCalculer" Content="↻" Width="44" Height="32" Margin="0,0,8,0" ToolTip="Recalculate" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
+                    <Button Name="BtnExportCsv" Content="⇩" Width="44" Height="32" Margin="0,0,8,0" ToolTip="Export CSV" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
+                    <Button Name="BtnCopyClipboard" Content="⧉" Width="44" Height="32" Margin="0,0,8,0" ToolTip="Copy" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
                     <TextBlock Name="LblLanguage" Text="Language:" VerticalAlignment="Center" Margin="6,0,6,0" Foreground="{StaticResource OfficeMutedTextBrush}"/>
                     <ToggleButton Name="TglLanguage" Width="110" Height="34" Style="{StaticResource LanguageSwitchStyle}"/>
                 </StackPanel>
@@ -265,10 +276,14 @@ function Set-LocalizedText {
     $window.Title = Get-Text -Key "WindowTitle"
     $lblHeaderTitle.Text = Get-Text -Key "HeaderTitle"
     $lblHeaderDescription.Text = Get-Text -Key "HeaderDescription"
-    $btnAjouter.Content = Get-Text -Key "AddRow"
-    $btnCalculer.Content = Get-Text -Key "Recalculate"
-    $btnExportCsv.Content = Get-Text -Key "ExportCsv"
-    $btnCopyClipboard.Content = Get-Text -Key "CopyClipboard"
+    $btnAjouter.Content = Get-Text -Key "AddRowIcon"
+    $btnAjouter.ToolTip = Get-Text -Key "AddRow"
+    $btnCalculer.Content = Get-Text -Key "RecalculateIcon"
+    $btnCalculer.ToolTip = Get-Text -Key "Recalculate"
+    $btnExportCsv.Content = Get-Text -Key "ExportCsvIcon"
+    $btnExportCsv.ToolTip = Get-Text -Key "ExportCsv"
+    $btnCopyClipboard.Content = Get-Text -Key "CopyClipboardIcon"
+    $btnCopyClipboard.ToolTip = Get-Text -Key "CopyClipboard"
     $lblLanguage.Text = Get-Text -Key "Language"
     $lblTotal.Text = Get-Text -Key "TotalLabel"
 
@@ -277,7 +292,8 @@ function Set-LocalizedText {
         $controls.LabelDebut.Text = Get-Text -Key "StartLabel"
         $controls.LabelFin.Text = Get-Text -Key "EndLabel"
         $controls.LabelDuree.Text = Get-Text -Key "DurationLabel"
-        $controls.BtnSupprimer.Content = Get-Text -Key "Delete"
+        $controls.BtnSupprimer.Content = Get-Text -Key "DeleteIcon"
+        $controls.BtnSupprimer.ToolTip = Get-Text -Key "Delete"
     }
 }
 
@@ -411,8 +427,9 @@ function Add-Ligne {
     $txtErreur.Foreground = Get-WindowResource -Name "OfficeErrorBrush"
 
     $btnSupprimer = New-Object System.Windows.Controls.Button
-    $btnSupprimer.Content = Get-Text -Key "Delete"
-    $btnSupprimer.Width = 90
+    $btnSupprimer.Content = Get-Text -Key "DeleteIcon"
+    $btnSupprimer.ToolTip = Get-Text -Key "Delete"
+    $btnSupprimer.Width = 40
     $btnSupprimer.Height = 32
     $btnSupprimer.Margin = "5"
     $btnSupprimer.Style = Get-WindowResource -Name "OfficeSecondaryButtonStyle"
