@@ -85,7 +85,9 @@ Add-Type -AssemblyName WindowsBase
                 <TextBlock Foreground="{StaticResource OfficeMutedTextBrush}" Text="Saisissez les heures au format HH:mm. Le total se met à jour automatiquement." Margin="0,0,0,12"/>
                 <StackPanel Orientation="Horizontal">
                     <Button Name="BtnAjouter" Content="+ Ajouter une ligne" Width="150" Height="34" Margin="0,0,10,0" Style="{StaticResource OfficeButtonStyle}"/>
-                    <Button Name="BtnCalculer" Content="Recalculer" Width="110" Height="34" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
+                    <Button Name="BtnCalculer" Content="Recalculer" Width="110" Height="34" Margin="0,0,10,0" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
+                    <Button Name="BtnExportCsv" Content="Export CSV" Width="110" Height="34" Margin="0,0,10,0" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
+                    <Button Name="BtnCopyClipboard" Content="Copy to clipboard" Width="145" Height="34" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
                 </StackPanel>
             </StackPanel>
         </Border>
@@ -120,6 +122,8 @@ $window = [Windows.Markup.XamlReader]::Load($reader)
 
 $btnAjouter = $window.FindName("BtnAjouter")
 $btnCalculer = $window.FindName("BtnCalculer")
+$btnExportCsv = $window.FindName("BtnExportCsv")
+$btnCopyClipboard = $window.FindName("BtnCopyClipboard")
 $panelLignes = $window.FindName("PanelLignes")
 $txtTotal = $window.FindName("TxtTotal")
 $txtTotalDecimal = $window.FindName("TxtTotalDecimal")
@@ -298,6 +302,65 @@ function Add-Ligne {
     Calculer-Total
 }
 
+function Get-WorktimeRows {
+    $rows = @()
+
+    foreach ($ligne in $panelLignes.Children) {
+        $controls = $ligne.Tag
+        $debutText = $controls.Debut.Text.Trim()
+        $finText = $controls.Fin.Text.Trim()
+        $dureeText = $controls.Duree.Text
+        $erreurText = $controls.Erreur.Text
+
+        $rows += [pscustomobject]@{
+            Debut = $debutText
+            Fin = $finText
+            Duree = $dureeText
+            Erreur = $erreurText
+        }
+    }
+
+    return $rows
+}
+
+function ConvertTo-CsvText {
+    Calculer-Total
+
+    $rows = @(Get-WorktimeRows)
+    $csvLines = @("Debut;Fin;Duree;Erreur")
+
+    foreach ($row in $rows) {
+        $values = @($row.Debut, $row.Fin, $row.Duree, $row.Erreur) | ForEach-Object {
+            $value = [string]$_
+            '"' + $value.Replace('"', '""') + '"'
+        }
+        $csvLines += ($values -join ";")
+    }
+
+    $csvLines += ""
+    $csvLines += ('"Total";"";"{0}";"{1}"' -f $txtTotal.Text, $txtValidationGlobale.Text)
+    $csvLines += ('"Total decimal";"";"{0}";""' -f $txtTotalDecimal.Text)
+
+    return ($csvLines -join [Environment]::NewLine)
+}
+
+function Export-WorktimeCsv {
+    $saveFileDialog = New-Object Microsoft.Win32.SaveFileDialog
+    $saveFileDialog.Filter = "Fichiers CSV (*.csv)|*.csv|Tous les fichiers (*.*)|*.*"
+    $saveFileDialog.FileName = "temps-travail.csv"
+    $saveFileDialog.DefaultExt = ".csv"
+
+    if ($saveFileDialog.ShowDialog($window) -eq $true) {
+        [System.IO.File]::WriteAllText($saveFileDialog.FileName, (ConvertTo-CsvText), [System.Text.Encoding]::UTF8)
+        $txtValidationGlobale.Text = "CSV exporté"
+    }
+}
+
+function Copy-WorktimeToClipboard {
+    [System.Windows.Clipboard]::SetText((ConvertTo-CsvText))
+    $txtValidationGlobale.Text = "Copie dans le presse-papiers"
+}
+
 function Calculer-Total {
     $total = [TimeSpan]::Zero
     $nombreErreurs = 0
@@ -367,6 +430,8 @@ function Calculer-Total {
 
 $btnAjouter.Add_Click({ Add-Ligne })
 $btnCalculer.Add_Click({ Calculer-Total })
+$btnExportCsv.Add_Click({ Export-WorktimeCsv })
+$btnCopyClipboard.Add_Click({ Copy-WorktimeToClipboard })
 
 Add-Ligne -Debut "08:00" -Fin "12:00"
 Add-Ligne -Debut "13:00" -Fin "17:00"
