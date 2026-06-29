@@ -102,7 +102,12 @@ Add-Type -AssemblyName WindowsBase
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="Total : " FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource OfficeTextBrush}"/>
-                <TextBlock Grid.Column="1" Name="TxtTotal" Text="00:00" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource OfficeBlueBrush}"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Name="TxtTotal" Text="00:00" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource OfficeBlueBrush}"/>
+                    <TextBlock Text=" (" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource OfficeMutedTextBrush}"/>
+                    <TextBlock Name="TxtTotalDecimal" Text="0.00 h" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource OfficeMutedTextBrush}"/>
+                    <TextBlock Text=")" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource OfficeMutedTextBrush}"/>
+                </StackPanel>
                 <TextBlock Grid.Column="2" Name="TxtValidationGlobale" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource OfficeErrorBrush}"/>
             </Grid>
         </Border>
@@ -117,6 +122,7 @@ $btnAjouter = $window.FindName("BtnAjouter")
 $btnCalculer = $window.FindName("BtnCalculer")
 $panelLignes = $window.FindName("PanelLignes")
 $txtTotal = $window.FindName("TxtTotal")
+$txtTotalDecimal = $window.FindName("TxtTotalDecimal")
 $txtValidationGlobale = $window.FindName("TxtValidationGlobale")
 
 function Get-WindowResource {
@@ -161,6 +167,12 @@ function Format-TimeSpan {
     $totalHours = [math]::Floor($TimeSpan.TotalHours)
     $minutes = $TimeSpan.Minutes
     return "{0:00}:{1:00}" -f $totalHours, $minutes
+}
+
+function Format-TimeSpanDecimal {
+    param([TimeSpan]$TimeSpan)
+
+    return [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.00} h", $TimeSpan.TotalHours)
 }
 
 function Set-FieldValidationState {
@@ -345,6 +357,7 @@ function Calculer-Total {
     }
 
     $txtTotal.Text = Format-TimeSpan -TimeSpan $total
+    $txtTotalDecimal.Text = Format-TimeSpanDecimal -TimeSpan $total
     if ($nombreErreurs -gt 0) {
         $txtValidationGlobale.Text = "$nombreErreurs ligne(s) à corriger"
     } else {
