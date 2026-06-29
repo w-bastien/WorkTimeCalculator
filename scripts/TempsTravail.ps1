@@ -1,3 +1,86 @@
+param(
+    [ValidateSet("fr", "en")]
+    [string]$Language = "fr"
+)
+
+$script:SupportedLanguages = @("fr", "en")
+$script:CurrentLanguage = $Language
+
+$script:Translations = @{
+    fr = @{
+        WindowTitle = "Calcul du temps de travail"
+        HeaderTitle = "Calcul du temps de travail"
+        HeaderDescription = "Saisissez les heures au format HH:mm. Le total se met à jour automatiquement."
+        AddRow = "+ Ajouter une ligne"
+        Recalculate = "Recalculer"
+        ExportCsv = "Export CSV"
+        CopyClipboard = "Copier"
+        Language = "Langue :"
+        TotalLabel = "Total : "
+        StartLabel = "Début :"
+        EndLabel = "Fin :"
+        DurationLabel = "Durée :"
+        Delete = "Supprimer"
+        TimeFormatTooltip = "Format attendu : HH:mm, exemple 08:30"
+        CsvHeader = "Debut;Fin;Duree;Erreur"
+        CsvTotal = "Total"
+        CsvTotalDecimal = "Total decimal"
+        CsvFilter = "Fichiers CSV (*.csv)|*.csv|Tous les fichiers (*.*)|*.*"
+        CsvFileName = "temps-travail.csv"
+        CsvExported = "CSV exporté"
+        Copied = "Copie dans le presse-papiers"
+        RequiredFields = "Champs obligatoires"
+        StartRequired = "L'heure de début est obligatoire."
+        EndRequired = "L'heure de fin est obligatoire."
+        FormatRequired = "Format HH:mm requis"
+        InvalidStart = "Format invalide. Exemple valide : 08:30."
+        InvalidEnd = "Format invalide. Exemple valide : 17:15."
+        Error = "Erreur"
+        RowsToFixFormat = "{0} ligne(s) à corriger"
+        LanguageFrench = "Français"
+        LanguageEnglish = "English"
+    }
+    en = @{
+        WindowTitle = "Worktime calculator"
+        HeaderTitle = "Worktime calculator"
+        HeaderDescription = "Enter times in HH:mm format. The total updates automatically."
+        AddRow = "+ Add row"
+        Recalculate = "Recalculate"
+        ExportCsv = "Export CSV"
+        CopyClipboard = "Copy"
+        Language = "Language:"
+        TotalLabel = "Total: "
+        StartLabel = "Start:"
+        EndLabel = "End:"
+        DurationLabel = "Duration:"
+        Delete = "Delete"
+        TimeFormatTooltip = "Expected format: HH:mm, example 08:30"
+        CsvHeader = "Start;End;Duration;Error"
+        CsvTotal = "Total"
+        CsvTotalDecimal = "Total decimal"
+        CsvFilter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*"
+        CsvFileName = "worktime.csv"
+        CsvExported = "CSV exported"
+        Copied = "Copied to clipboard"
+        RequiredFields = "Required fields"
+        StartRequired = "Start time is required."
+        EndRequired = "End time is required."
+        FormatRequired = "HH:mm format required"
+        InvalidStart = "Invalid format. Valid example: 08:30."
+        InvalidEnd = "Invalid format. Valid example: 17:15."
+        Error = "Error"
+        RowsToFixFormat = "{0} row(s) to fix"
+        LanguageFrench = "Français"
+        LanguageEnglish = "English"
+    }
+}
+
+function Get-Text {
+    param([string]$Key)
+
+    return $script:Translations[$script:CurrentLanguage][$Key]
+}
+
 Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName WindowsBase
@@ -5,7 +88,7 @@ Add-Type -AssemblyName WindowsBase
 [xml]$xaml = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Calcul du temps de travail"
+        Title="Worktime calculator"
         Height="520"
         Width="760"
         MinHeight="420"
@@ -81,13 +164,15 @@ Add-Type -AssemblyName WindowsBase
 
         <Border Grid.Row="0" Background="White" BorderBrush="{StaticResource OfficeBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,12">
             <StackPanel>
-                <TextBlock Text="Calcul du temps de travail" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource OfficeTextBrush}" Margin="0,0,0,4"/>
-                <TextBlock Foreground="{StaticResource OfficeMutedTextBrush}" Text="Saisissez les heures au format HH:mm. Le total se met à jour automatiquement." Margin="0,0,0,12"/>
+                <TextBlock Name="LblHeaderTitle" Text="Calcul du temps de travail" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource OfficeTextBrush}" Margin="0,0,0,4"/>
+                <TextBlock Name="LblHeaderDescription" Foreground="{StaticResource OfficeMutedTextBrush}" Text="Saisissez les heures au format HH:mm. Le total se met à jour automatiquement." Margin="0,0,0,12"/>
                 <StackPanel Orientation="Horizontal">
                     <Button Name="BtnAjouter" Content="+ Ajouter une ligne" Width="150" Height="34" Margin="0,0,10,0" Style="{StaticResource OfficeButtonStyle}"/>
                     <Button Name="BtnCalculer" Content="Recalculer" Width="110" Height="34" Margin="0,0,10,0" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
                     <Button Name="BtnExportCsv" Content="Export CSV" Width="110" Height="34" Margin="0,0,10,0" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
-                    <Button Name="BtnCopyClipboard" Content="Copy to clipboard" Width="145" Height="34" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
+                    <Button Name="BtnCopyClipboard" Content="Copy to clipboard" Width="110" Height="34" Margin="0,0,10,0" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
+                    <TextBlock Name="LblLanguage" Text="Langue :" VerticalAlignment="Center" Margin="6,0,6,0" Foreground="{StaticResource OfficeMutedTextBrush}"/>
+                    <ComboBox Name="CmbLanguage" Width="110" Height="34" VerticalContentAlignment="Center"/>
                 </StackPanel>
             </StackPanel>
         </Border>
@@ -103,7 +188,7 @@ Add-Type -AssemblyName WindowsBase
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="Total : " FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource OfficeTextBrush}"/>
+                <TextBlock Grid.Column="0" Name="LblTotal" Text="Total : " FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource OfficeTextBrush}"/>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Name="TxtTotal" Text="00:00" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource OfficeBlueBrush}"/>
                     <TextBlock Text=" (" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource OfficeMutedTextBrush}"/>
@@ -124,6 +209,11 @@ $btnAjouter = $window.FindName("BtnAjouter")
 $btnCalculer = $window.FindName("BtnCalculer")
 $btnExportCsv = $window.FindName("BtnExportCsv")
 $btnCopyClipboard = $window.FindName("BtnCopyClipboard")
+$cmbLanguage = $window.FindName("CmbLanguage")
+$lblHeaderTitle = $window.FindName("LblHeaderTitle")
+$lblHeaderDescription = $window.FindName("LblHeaderDescription")
+$lblLanguage = $window.FindName("LblLanguage")
+$lblTotal = $window.FindName("LblTotal")
 $panelLignes = $window.FindName("PanelLignes")
 $txtTotal = $window.FindName("TxtTotal")
 $txtTotalDecimal = $window.FindName("TxtTotalDecimal")
@@ -135,6 +225,43 @@ function Get-WindowResource {
     return $window.Resources[$Name]
 }
 
+function Set-LocalizedText {
+    $window.Title = Get-Text -Key "WindowTitle"
+    $lblHeaderTitle.Text = Get-Text -Key "HeaderTitle"
+    $lblHeaderDescription.Text = Get-Text -Key "HeaderDescription"
+    $btnAjouter.Content = Get-Text -Key "AddRow"
+    $btnCalculer.Content = Get-Text -Key "Recalculate"
+    $btnExportCsv.Content = Get-Text -Key "ExportCsv"
+    $btnCopyClipboard.Content = Get-Text -Key "CopyClipboard"
+    $lblLanguage.Text = Get-Text -Key "Language"
+    $lblTotal.Text = Get-Text -Key "TotalLabel"
+
+    foreach ($ligne in $panelLignes.Children) {
+        $controls = $ligne.Tag
+        $controls.LabelDebut.Text = Get-Text -Key "StartLabel"
+        $controls.LabelFin.Text = Get-Text -Key "EndLabel"
+        $controls.LabelDuree.Text = Get-Text -Key "DurationLabel"
+        $controls.BtnSupprimer.Content = Get-Text -Key "Delete"
+    }
+}
+
+function Update-LanguagePicker {
+    $cmbLanguage.Items.Clear()
+    foreach ($languageCode in $script:SupportedLanguages) {
+        $item = New-Object System.Windows.Controls.ComboBoxItem
+        $item.Tag = $languageCode
+        if ($languageCode -eq "fr") {
+            $item.Content = Get-Text -Key "LanguageFrench"
+        } else {
+            $item.Content = Get-Text -Key "LanguageEnglish"
+        }
+        $cmbLanguage.Items.Add($item) | Out-Null
+        if ($languageCode -eq $script:CurrentLanguage) {
+            $cmbLanguage.SelectedItem = $item
+        }
+    }
+}
+
 function New-TimeTextBox {
     param([string]$Text = "")
 
@@ -143,7 +270,7 @@ function New-TimeTextBox {
     $textBox.Height = 32
     $textBox.Margin = "5"
     $textBox.Text = $Text
-    $textBox.ToolTip = "Format attendu : HH:mm, exemple 08:30"
+    $textBox.ToolTip = (Get-Text -Key "TimeFormatTooltip")
     $textBox.Style = Get-WindowResource -Name "OfficeTextBoxStyle"
     return $textBox
 }
@@ -189,7 +316,7 @@ function Set-FieldValidationState {
     if ($IsValid) {
         $TextBox.ClearValue([System.Windows.Controls.Control]::BorderBrushProperty)
         $TextBox.ClearValue([System.Windows.Controls.Control]::BorderThicknessProperty)
-        $TextBox.ToolTip = "Format attendu : HH:mm, exemple 08:30"
+        $TextBox.ToolTip = (Get-Text -Key "TimeFormatTooltip")
         return
     }
 
@@ -221,7 +348,7 @@ function Add-Ligne {
     }
 
     $lblDebut = New-Object System.Windows.Controls.TextBlock
-    $lblDebut.Text = "Début :"
+    $lblDebut.Text = Get-Text -Key "StartLabel"
     $lblDebut.VerticalAlignment = "Center"
     $lblDebut.Margin = "5"
     $lblDebut.Foreground = Get-WindowResource -Name "OfficeTextBrush"
@@ -229,7 +356,7 @@ function Add-Ligne {
     $txtDebut = New-TimeTextBox -Text $Debut
 
     $lblFin = New-Object System.Windows.Controls.TextBlock
-    $lblFin.Text = "Fin :"
+    $lblFin.Text = Get-Text -Key "EndLabel"
     $lblFin.VerticalAlignment = "Center"
     $lblFin.Margin = "5"
     $lblFin.Foreground = Get-WindowResource -Name "OfficeTextBrush"
@@ -237,7 +364,7 @@ function Add-Ligne {
     $txtFin = New-TimeTextBox -Text $Fin
 
     $lblDuree = New-Object System.Windows.Controls.TextBlock
-    $lblDuree.Text = "Durée :"
+    $lblDuree.Text = Get-Text -Key "DurationLabel"
     $lblDuree.VerticalAlignment = "Center"
     $lblDuree.Margin = "5"
     $lblDuree.Foreground = Get-WindowResource -Name "OfficeTextBrush"
@@ -255,7 +382,7 @@ function Add-Ligne {
     $txtErreur.Foreground = Get-WindowResource -Name "OfficeErrorBrush"
 
     $btnSupprimer = New-Object System.Windows.Controls.Button
-    $btnSupprimer.Content = "Supprimer"
+    $btnSupprimer.Content = Get-Text -Key "Delete"
     $btnSupprimer.Width = 90
     $btnSupprimer.Height = 32
     $btnSupprimer.Margin = "5"
@@ -285,6 +412,10 @@ function Add-Ligne {
         Fin = $txtFin
         Duree = $txtDuree
         Erreur = $txtErreur
+        LabelDebut = $lblDebut
+        LabelFin = $lblFin
+        LabelDuree = $lblDuree
+        BtnSupprimer = $btnSupprimer
     }
 
     $txtDebut.Add_TextChanged({ Calculer-Total })
@@ -327,7 +458,7 @@ function ConvertTo-CsvText {
     Calculer-Total
 
     $rows = @(Get-WorktimeRows)
-    $csvLines = @("Debut;Fin;Duree;Erreur")
+    $csvLines = @(Get-Text -Key "CsvHeader")
 
     foreach ($row in $rows) {
         $values = @($row.Debut, $row.Fin, $row.Duree, $row.Erreur) | ForEach-Object {
@@ -338,27 +469,27 @@ function ConvertTo-CsvText {
     }
 
     $csvLines += ""
-    $csvLines += ('"Total";"";"{0}";"{1}"' -f $txtTotal.Text, $txtValidationGlobale.Text)
-    $csvLines += ('"Total decimal";"";"{0}";""' -f $txtTotalDecimal.Text)
+    $csvLines += ('"{0}";"";"{1}";"{2}"' -f (Get-Text -Key "CsvTotal"), $txtTotal.Text, $txtValidationGlobale.Text)
+    $csvLines += ('"{0}";"";"{1}";""' -f (Get-Text -Key "CsvTotalDecimal"), $txtTotalDecimal.Text)
 
     return ($csvLines -join [Environment]::NewLine)
 }
 
 function Export-WorktimeCsv {
     $saveFileDialog = New-Object Microsoft.Win32.SaveFileDialog
-    $saveFileDialog.Filter = "Fichiers CSV (*.csv)|*.csv|Tous les fichiers (*.*)|*.*"
-    $saveFileDialog.FileName = "temps-travail.csv"
+    $saveFileDialog.Filter = Get-Text -Key "CsvFilter"
+    $saveFileDialog.FileName = Get-Text -Key "CsvFileName"
     $saveFileDialog.DefaultExt = ".csv"
 
     if ($saveFileDialog.ShowDialog($window) -eq $true) {
         [System.IO.File]::WriteAllText($saveFileDialog.FileName, (ConvertTo-CsvText), [System.Text.Encoding]::UTF8)
-        $txtValidationGlobale.Text = "CSV exporté"
+        $txtValidationGlobale.Text = Get-Text -Key "CsvExported"
     }
 }
 
 function Copy-WorktimeToClipboard {
     [System.Windows.Clipboard]::SetText((ConvertTo-CsvText))
-    $txtValidationGlobale.Text = "Copie dans le presse-papiers"
+    $txtValidationGlobale.Text = Get-Text -Key "Copied"
 }
 
 function Calculer-Total {
@@ -384,26 +515,26 @@ function Calculer-Total {
         if ([string]::IsNullOrWhiteSpace($debutText) -or [string]::IsNullOrWhiteSpace($finText)) {
             $dureeTextBlock.Text = "00:00"
             $dureeTextBlock.Foreground = Get-WindowResource -Name "OfficeMutedTextBrush"
-            $erreurTextBlock.Text = "Champs obligatoires"
+            $erreurTextBlock.Text = Get-Text -Key "RequiredFields"
             if ([string]::IsNullOrWhiteSpace($debutText)) {
-                Set-FieldValidationState -TextBox $debutTextBox -IsValid $false -Message "L'heure de début est obligatoire."
+                Set-FieldValidationState -TextBox $debutTextBox -IsValid $false -Message (Get-Text -Key "StartRequired")
             }
             if ([string]::IsNullOrWhiteSpace($finText)) {
-                Set-FieldValidationState -TextBox $finTextBox -IsValid $false -Message "L'heure de fin est obligatoire."
+                Set-FieldValidationState -TextBox $finTextBox -IsValid $false -Message (Get-Text -Key "EndRequired")
             }
             $nombreErreurs++
             continue
         }
 
         if ($null -eq $debut -or $null -eq $fin) {
-            $dureeTextBlock.Text = "Erreur"
+            $dureeTextBlock.Text = Get-Text -Key "Error"
             $dureeTextBlock.Foreground = Get-WindowResource -Name "OfficeErrorBrush"
-            $erreurTextBlock.Text = "Format HH:mm requis"
+            $erreurTextBlock.Text = Get-Text -Key "FormatRequired"
             if ($null -eq $debut) {
-                Set-FieldValidationState -TextBox $debutTextBox -IsValid $false -Message "Format invalide. Exemple valide : 08:30."
+                Set-FieldValidationState -TextBox $debutTextBox -IsValid $false -Message (Get-Text -Key "InvalidStart")
             }
             if ($null -eq $fin) {
-                Set-FieldValidationState -TextBox $finTextBox -IsValid $false -Message "Format invalide. Exemple valide : 17:15."
+                Set-FieldValidationState -TextBox $finTextBox -IsValid $false -Message (Get-Text -Key "InvalidEnd")
             }
             $nombreErreurs++
             continue
@@ -422,11 +553,22 @@ function Calculer-Total {
     $txtTotal.Text = Format-TimeSpan -TimeSpan $total
     $txtTotalDecimal.Text = Format-TimeSpanDecimal -TimeSpan $total
     if ($nombreErreurs -gt 0) {
-        $txtValidationGlobale.Text = "$nombreErreurs ligne(s) à corriger"
+        $txtValidationGlobale.Text = [string]::Format((Get-Text -Key "RowsToFixFormat"), $nombreErreurs)
     } else {
         $txtValidationGlobale.Text = ""
     }
 }
+
+$cmbLanguage.Add_SelectionChanged({
+    if ($null -eq $cmbLanguage.SelectedItem) { return }
+
+    $script:CurrentLanguage = [string]$cmbLanguage.SelectedItem.Tag
+    Set-LocalizedText
+    Calculer-Total
+})
+
+Set-LocalizedText
+Update-LanguagePicker
 
 $btnAjouter.Add_Click({ Add-Ligne })
 $btnCalculer.Add_Click({ Calculer-Total })
