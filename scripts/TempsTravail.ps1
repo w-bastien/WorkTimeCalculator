@@ -1,6 +1,6 @@
 param(
     [ValidateSet("fr", "en")]
-    [string]$Language = "fr"
+    [string]$Language = "en"
 )
 
 $script:SupportedLanguages = @("fr", "en")
@@ -39,6 +39,7 @@ $script:Translations = @{
         RowsToFixFormat = "{0} ligne(s) à corriger"
         LanguageFrench = "Français"
         LanguageEnglish = "English"
+        LanguageSwitchTooltip = "Changer de langue"
     }
     en = @{
         WindowTitle = "Worktime calculator"
@@ -72,6 +73,7 @@ $script:Translations = @{
         RowsToFixFormat = "{0} row(s) to fix"
         LanguageFrench = "Français"
         LanguageEnglish = "English"
+        LanguageSwitchTooltip = "Switch language"
     }
 }
 
@@ -153,6 +155,40 @@ Add-Type -AssemblyName WindowsBase
             <Setter Property="Padding" Value="8,3"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
+
+        <Style x:Key="LanguageSwitchStyle" TargetType="ToggleButton">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource OfficeTextBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource OfficeBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="SwitchBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="17">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeBlueBrush}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource OfficeBlueBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="{StaticResource OfficeBlueHoverBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid Margin="16">
@@ -164,15 +200,15 @@ Add-Type -AssemblyName WindowsBase
 
         <Border Grid.Row="0" Background="White" BorderBrush="{StaticResource OfficeBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,12">
             <StackPanel>
-                <TextBlock Name="LblHeaderTitle" Text="Calcul du temps de travail" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource OfficeTextBrush}" Margin="0,0,0,4"/>
-                <TextBlock Name="LblHeaderDescription" Foreground="{StaticResource OfficeMutedTextBrush}" Text="Saisissez les heures au format HH:mm. Le total se met à jour automatiquement." Margin="0,0,0,12"/>
+                <TextBlock Name="LblHeaderTitle" Text="Worktime calculator" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource OfficeTextBrush}" Margin="0,0,0,4"/>
+                <TextBlock Name="LblHeaderDescription" Foreground="{StaticResource OfficeMutedTextBrush}" Text="Enter times in HH:mm format. The total updates automatically." Margin="0,0,0,12"/>
                 <StackPanel Orientation="Horizontal">
-                    <Button Name="BtnAjouter" Content="+ Ajouter une ligne" Width="150" Height="34" Margin="0,0,10,0" Style="{StaticResource OfficeButtonStyle}"/>
-                    <Button Name="BtnCalculer" Content="Recalculer" Width="110" Height="34" Margin="0,0,10,0" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
+                    <Button Name="BtnAjouter" Content="+ Add row" Width="150" Height="34" Margin="0,0,10,0" Style="{StaticResource OfficeButtonStyle}"/>
+                    <Button Name="BtnCalculer" Content="Recalculate" Width="110" Height="34" Margin="0,0,10,0" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
                     <Button Name="BtnExportCsv" Content="Export CSV" Width="110" Height="34" Margin="0,0,10,0" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
-                    <Button Name="BtnCopyClipboard" Content="Copy to clipboard" Width="110" Height="34" Margin="0,0,10,0" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
-                    <TextBlock Name="LblLanguage" Text="Langue :" VerticalAlignment="Center" Margin="6,0,6,0" Foreground="{StaticResource OfficeMutedTextBrush}"/>
-                    <ComboBox Name="CmbLanguage" Width="110" Height="34" VerticalContentAlignment="Center"/>
+                    <Button Name="BtnCopyClipboard" Content="Copy" Width="110" Height="34" Margin="0,0,10,0" Style="{StaticResource OfficeSecondaryButtonStyle}"/>
+                    <TextBlock Name="LblLanguage" Text="Language:" VerticalAlignment="Center" Margin="6,0,6,0" Foreground="{StaticResource OfficeMutedTextBrush}"/>
+                    <ToggleButton Name="TglLanguage" Width="110" Height="34" Style="{StaticResource LanguageSwitchStyle}"/>
                 </StackPanel>
             </StackPanel>
         </Border>
@@ -188,7 +224,7 @@ Add-Type -AssemblyName WindowsBase
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Name="LblTotal" Text="Total : " FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource OfficeTextBrush}"/>
+                <TextBlock Grid.Column="0" Name="LblTotal" Text="Total: " FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource OfficeTextBrush}"/>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Name="TxtTotal" Text="00:00" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource OfficeBlueBrush}"/>
                     <TextBlock Text=" (" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource OfficeMutedTextBrush}"/>
@@ -209,7 +245,7 @@ $btnAjouter = $window.FindName("BtnAjouter")
 $btnCalculer = $window.FindName("BtnCalculer")
 $btnExportCsv = $window.FindName("BtnExportCsv")
 $btnCopyClipboard = $window.FindName("BtnCopyClipboard")
-$cmbLanguage = $window.FindName("CmbLanguage")
+$tglLanguage = $window.FindName("TglLanguage")
 $lblHeaderTitle = $window.FindName("LblHeaderTitle")
 $lblHeaderDescription = $window.FindName("LblHeaderDescription")
 $lblLanguage = $window.FindName("LblLanguage")
@@ -245,21 +281,14 @@ function Set-LocalizedText {
     }
 }
 
-function Update-LanguagePicker {
-    $cmbLanguage.Items.Clear()
-    foreach ($languageCode in $script:SupportedLanguages) {
-        $item = New-Object System.Windows.Controls.ComboBoxItem
-        $item.Tag = $languageCode
-        if ($languageCode -eq "fr") {
-            $item.Content = Get-Text -Key "LanguageFrench"
-        } else {
-            $item.Content = Get-Text -Key "LanguageEnglish"
-        }
-        $cmbLanguage.Items.Add($item) | Out-Null
-        if ($languageCode -eq $script:CurrentLanguage) {
-            $cmbLanguage.SelectedItem = $item
-        }
+function Update-LanguageSwitch {
+    $tglLanguage.IsChecked = ($script:CurrentLanguage -eq "fr")
+    if ($script:CurrentLanguage -eq "fr") {
+        $tglLanguage.Content = "FR | EN"
+    } else {
+        $tglLanguage.Content = "EN | FR"
     }
+    $tglLanguage.ToolTip = Get-Text -Key "LanguageSwitchTooltip"
 }
 
 function New-TimeTextBox {
@@ -559,16 +588,20 @@ function Calculer-Total {
     }
 }
 
-$cmbLanguage.Add_SelectionChanged({
-    if ($null -eq $cmbLanguage.SelectedItem) { return }
+$tglLanguage.Add_Click({
+    if ($script:CurrentLanguage -eq "en") {
+        $script:CurrentLanguage = "fr"
+    } else {
+        $script:CurrentLanguage = "en"
+    }
 
-    $script:CurrentLanguage = [string]$cmbLanguage.SelectedItem.Tag
     Set-LocalizedText
+    Update-LanguageSwitch
     Calculer-Total
 })
 
 Set-LocalizedText
-Update-LanguagePicker
+Update-LanguageSwitch
 
 $btnAjouter.Add_Click({ Add-Ligne })
 $btnCalculer.Add_Click({ Calculer-Total })
